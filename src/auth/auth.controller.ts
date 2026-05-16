@@ -4,15 +4,32 @@ import {
   Post,
   UploadedFile,
   UseInterceptors,
+  Res,
+  Req,
+  Patch,
+  Param,
+  UseGuards,
 } from '@nestjs/common';
 
-import { AuthService } from './auth.service';
-import { RegisterDto } from './dto/register.dto';
-import { RegisterAdminDto } from './dto/register-admin.dto';
+import type { Request,Response } from 'express';
+
 import { FileInterceptor } from '@nestjs/platform-express';
+
+import { AuthService } from './auth.service';
+
+import { RegisterDto } from './dto/register.dto';
+
+import { RegisterAdminDto } from './dto/register-admin.dto';
+
 import { CreateStudentDto } from './dto/create-student.dto';
 
 import { LoginDto } from './dto/login.dto';
+
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+
+import { RolesGuard } from './guards/roles.guard';
+
+import { Roles } from './decorators/roles.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -20,47 +37,111 @@ export class AuthController {
     private authService: AuthService,
   ) {}
 
+  // =========================
+  // REGISTER USER
+  // =========================
+
   @Post('register')
   register(
     @Body() registerDto: RegisterDto,
   ) {
-    return this.authService.register(registerDto);
+    return this.authService.register(
+      registerDto,
+    );
   }
 
+  // =========================
+  // REGISTER ADMIN
+  // =========================
+
   @Post('register-admin')
-registerAdmin(
-  @Body()
-  registerAdminDto: RegisterAdminDto,
-) {
-  return this.authService.registerAdmin(
-    registerAdminDto,
-  );
-}
+  registerAdmin(
+    @Body()
+    registerAdminDto: RegisterAdminDto,
+  ) {
+    return this.authService.registerAdmin(
+      registerAdminDto,
+    );
+  }
 
-@Post('register-student')
+  // =========================
+  // REGISTER STUDENT
+  // =========================
 
-@UseInterceptors(
-  FileInterceptor('idCardImage'),
-)
+  @Post('register-student')
 
-registerStudent(
-  @Body()
-  createStudentDto: CreateStudentDto,
+  @UseInterceptors(
+    FileInterceptor('idCardImage'),
+  )
 
-  @UploadedFile()
-  file: Express.Multer.File,
-) {
-  return this.authService.registerStudent(
-    createStudentDto,
-    file,
-  );
-}
+  registerStudent(
+    @Body()
+    createStudentDto: CreateStudentDto,
+
+    @UploadedFile()
+    file: Express.Multer.File,
+  ) {
+    return this.authService.registerStudent(
+      createStudentDto,
+      file,
+    );
+  }
+
+  // =========================
+  // LOGIN
+  // =========================
 
   @Post('login')
   login(
     @Body() loginDto: LoginDto,
+
+    @Res({ passthrough: true })
+    response: Response,
   ) {
-    return this.authService.login(loginDto);
+    return this.authService.login(
+      loginDto,
+      response,
+    );
   }
+
+
+// =========================
+// Logout
+// =========================  
+@Post('logout')
+logout(
+  @Req() request: Request,
+
+  @Res({ passthrough: true })
+  response: Response,
+) {
+  return this.authService.logout(
+    request,
+    response,
+  );
 }
 
+// =========================
+// VERIFY STUDENT (ADMIN ONLY)
+// =========================
+
+@Patch(
+  'verify-student/:studentId',
+)
+
+@UseGuards(
+  JwtAuthGuard,
+  RolesGuard,
+)
+
+@Roles('ADMIN')
+
+verifyStudent(
+  @Param('studentId')
+  studentId: string,
+) {
+  return this.authService
+    .verifyStudent(studentId);
+}
+
+}

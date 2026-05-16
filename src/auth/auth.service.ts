@@ -7,6 +7,11 @@ import {
 
 import { JwtService } from '@nestjs/jwt';
 
+import type {
+  Request,
+  Response,
+} from 'express';
+
 import * as bcrypt from 'bcrypt';
 
 import { v2 as cloudinary } from 'cloudinary';
@@ -58,8 +63,11 @@ export class AuthService {
     const user =
       await this.usersService.createUser({
         name,
+
         email: normalizedEmail,
+
         password: hashedPassword,
+
         role: UserRole.USER,
       });
 
@@ -69,8 +77,11 @@ export class AuthService {
 
       user: {
         id: user._id,
+
         name: user.name,
+
         email: user.email,
+
         role: user.role,
       },
     };
@@ -90,7 +101,10 @@ export class AuthService {
       adminSecretKey,
     } = registerAdminDto;
 
-    // Verify secret key
+    // =========================
+    // VERIFY SECRET KEY
+    // =========================
+
     if (
       adminSecretKey !==
       process.env.ADMIN_SECRET_KEY
@@ -120,8 +134,11 @@ export class AuthService {
     const admin =
       await this.usersService.createUser({
         name,
+
         email: normalizedEmail,
+
         password: hashedPassword,
+
         role: UserRole.ADMIN,
       });
 
@@ -131,8 +148,11 @@ export class AuthService {
 
       admin: {
         id: admin._id,
+
         name: admin.name,
+
         email: admin.email,
+
         role: admin.role,
       },
     };
@@ -159,9 +179,9 @@ export class AuthService {
       email.toLowerCase();
 
     const existingUser =
-  await this.usersService.findByEmail(
-    normalizedEmail,
-  );
+      await this.usersService.findByEmail(
+        normalizedEmail,
+      );
 
     if (existingUser) {
       throw new BadRequestException(
@@ -175,13 +195,12 @@ export class AuthService {
       );
     }
 
-
+    // =========================
+    // HASH PASSWORD
+    // =========================
 
     const hashedPassword =
-  await bcrypt.hash(password, 10);
-
-
-
+      await bcrypt.hash(password, 10);
 
     // =========================
     // CLOUDINARY CONFIG
@@ -205,86 +224,81 @@ export class AuthService {
     // UPLOAD IMAGE
     // =========================
 
-    // const uploadResult =
-    //   await cloudinary.uploader.upload(
-    //     file.path,
-    //     {
-    //       folder:
-    //         'student-id-cards',
-    //     },
-    //   );
-
     const uploadResult =
-  await new Promise<any>(
-    (resolve, reject) => {
-      cloudinary.uploader
-        .upload_stream(
-          {
-            folder:
-              'student-id-cards',
-          },
+      await new Promise<any>(
+        (resolve, reject) => {
+          cloudinary.uploader
+            .upload_stream(
+              {
+                folder:
+                  'student-id-cards',
+              },
 
-          (
-            error,
-            result,
-          ) => {
-            if (error) {
-              reject(error);
-            } else {
-              resolve(result);
-            }
-          },
-        )
-        .end(file.buffer);
-    },
-  );
+              (
+                error,
+                result,
+              ) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(result);
+                }
+              },
+            )
+            .end(file.buffer);
+        },
+      );
 
     // =========================
     // SAVE STUDENT
     // =========================
 
-    // const student =
-    //   await this.usersService.createStudent({
-    //     fullName,
-
-    //     email: normalizedEmail,
-
-    //     mobileNumber,
-
-    //     collegeName,
-
-    //     idCardImageUrl:
-    //       uploadResult.secure_url,
-
-    //     isStudentVerified: false,
-    //   });
-
-
     const student =
-  await this.usersService.createUser({
-    name: fullName,
+      await this.usersService.createUser({
+        name: fullName,
 
-    email: normalizedEmail,
+        email: normalizedEmail,
 
-    password: hashedPassword,
+        password:
+          hashedPassword,
 
-    role: UserRole.STUDENT,
+        role: UserRole.STUDENT,
 
-    mobileNumber,
+        mobileNumber,
 
-    collegeName,
+        collegeName,
 
-    idCardImageUrl:
-      uploadResult.secure_url,
+        idCardImageUrl:
+          uploadResult.secure_url,
 
-    isStudentVerified: false,
-  });
+        isStudentVerified: false,
+      });
 
     return {
       message:
         'Student registered successfully',
 
-      student,
+      student: {
+        id: student._id,
+
+        name: student.name,
+
+        email: student.email,
+
+        role: student.role,
+
+        mobileNumber:
+          student.mobileNumber,
+
+        collegeName:
+          student.collegeName,
+
+        isStudentVerified:
+          student.isStudentVerified,
+
+        idCardImageUrl:
+          student.idCardImageUrl,
+      },
     };
   }
 
@@ -292,7 +306,11 @@ export class AuthService {
   // LOGIN
   // =========================
 
-  async login(loginDto: LoginDto) {
+  async login(
+    loginDto: LoginDto,
+
+    response: Response,
+  ) {
     const { email, password } =
       loginDto;
 
@@ -322,26 +340,140 @@ export class AuthService {
       );
     }
 
+    // =========================
+    // JWT PAYLOAD
+    // =========================
+
     const payload = {
       sub: user._id,
+
       email: user.email,
+
       role: user.role,
     };
 
     const accessToken =
       this.jwtService.sign(payload);
 
-    return {
-      message: 'Login successful',
+    // =========================
+    // STORE TOKEN IN COOKIE
+    // =========================
+
+    response.cookie(
+      'accessToken',
 
       accessToken,
 
+      {
+        httpOnly: true,
+
+        secure: false,
+
+        sameSite: 'lax',
+
+        maxAge:
+          7 *
+          24 *
+          60 *
+          60 *
+          1000,
+      },
+    );
+
+    // =========================
+    // RESPONSE
+    // =========================
+
+    return {
+      message: 'Login successful',
+
       user: {
         id: user._id,
+
         name: user.name,
+
         email: user.email,
+
         role: user.role,
       },
     };
   }
+
+  // =========================
+  // LOGOUT
+  // =========================
+
+  async logout(
+    request: Request,
+
+    response: Response,
+  ) {
+    response.clearCookie(
+      'accessToken',
+
+      {
+        httpOnly: true,
+
+        secure: false,
+
+        sameSite: 'lax',
+      },
+    );
+
+    return {
+      message:
+        'Logout successful',
+    };
+  }
+
+
+  // =========================
+// VERIFY STUDENT
+// =========================
+
+async verifyStudent(
+  studentId: string,
+) {
+  const student =
+    await this.usersService.findById(
+      studentId,
+    );
+
+  if (!student) {
+    throw new BadRequestException(
+      'Student not found',
+    );
+  }
+
+  if (
+    student.role !==
+    UserRole.STUDENT
+  ) {
+    throw new BadRequestException(
+      'User is not a student',
+    );
+  }
+
+  student.isStudentVerified =
+    true;
+
+  await student.save();
+
+  return {
+    message:
+      'Student verified successfully',
+
+    student: {
+      id: student._id,
+
+      name: student.name,
+
+      email: student.email,
+
+      isStudentVerified:
+        student.isStudentVerified,
+    },
+  };
+}
+
 }
