@@ -150,6 +150,7 @@ export class AuthService {
     const {
       fullName,
       email,
+      password,
       mobileNumber,
       collegeName,
     } = createStudentDto;
@@ -157,12 +158,12 @@ export class AuthService {
     const normalizedEmail =
       email.toLowerCase();
 
-    const existingStudent =
-      await this.usersService.findStudentByEmail(
-        normalizedEmail,
-      );
+    const existingUser =
+  await this.usersService.findByEmail(
+    normalizedEmail,
+  );
 
-    if (existingStudent) {
+    if (existingUser) {
       throw new BadRequestException(
         'Student already registered',
       );
@@ -173,6 +174,14 @@ export class AuthService {
         'ID card image is required',
       );
     }
+
+
+
+    const hashedPassword =
+  await bcrypt.hash(password, 10);
+
+
+
 
     // =========================
     // CLOUDINARY CONFIG
@@ -234,21 +243,42 @@ export class AuthService {
     // SAVE STUDENT
     // =========================
 
+    // const student =
+    //   await this.usersService.createStudent({
+    //     fullName,
+
+    //     email: normalizedEmail,
+
+    //     mobileNumber,
+
+    //     collegeName,
+
+    //     idCardImageUrl:
+    //       uploadResult.secure_url,
+
+    //     isStudentVerified: false,
+    //   });
+
+
     const student =
-      await this.usersService.createStudent({
-        fullName,
+  await this.usersService.createUser({
+    name: fullName,
 
-        email: normalizedEmail,
+    email: normalizedEmail,
 
-        mobileNumber,
+    password: hashedPassword,
 
-        collegeName,
+    role: UserRole.STUDENT,
 
-        idCardImageUrl:
-          uploadResult.secure_url,
+    mobileNumber,
 
-        isStudentVerified: false,
-      });
+    collegeName,
+
+    idCardImageUrl:
+      uploadResult.secure_url,
+
+    isStudentVerified: false,
+  });
 
     return {
       message:

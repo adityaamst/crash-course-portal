@@ -1,11 +1,19 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import {
+  Prop,
+  Schema,
+  SchemaFactory,
+} from '@nestjs/mongoose';
+
 import { HydratedDocument } from 'mongoose';
 
-export type UserDocument = HydratedDocument<User>;
+export type UserDocument =
+  HydratedDocument<User>;
 
 export enum UserRole {
   USER = 'USER',
+
   STUDENT = 'STUDENT',
+
   ADMIN = 'ADMIN',
 }
 
@@ -31,14 +39,29 @@ export class User {
 
   @Prop({
     enum: UserRole,
+
     default: UserRole.USER,
   })
   role!: UserRole;
+
+  // =========================
+  // STUDENT FIELDS
+  // =========================
 
   @Prop({
     default: false,
   })
   isStudentVerified!: boolean;
+
+  @Prop()
+  mobileNumber?: string;
+
+  @Prop()
+  collegeName?: string;
+
+  @Prop()
+  idCardImageUrl?: string;
 }
 
-export const UserSchema = SchemaFactory.createForClass(User);
+export const UserSchema =
+  SchemaFactory.createForClass(User);
