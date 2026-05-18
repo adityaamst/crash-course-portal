@@ -6,44 +6,47 @@ import {
 
 import { HydratedDocument } from 'mongoose';
 
-export type StudentDocument =
-  HydratedDocument<Student>;
+export type CourseDocument =
+  HydratedDocument<Course>;
 
 @Schema({
   timestamps: true,
 })
-export class Student {
+export class Course {
   @Prop({
     required: true,
+    trim: true,
   })
-  fullName!: string;
-
-  @Prop({
-    required: true,
-    unique: true,
-  })
-  email!: string;
+  courseName!: string;
 
   @Prop({
     required: true,
   })
-  mobileNumber!: string;
+  description!: string;
+
+  @Prop({
+    required: true,
+    min: 0,
+  })
+  price!: number;
 
   @Prop({
     required: true,
   })
-  collegeName!: string;
+  estimatedCompletionTime!: string;
 
   @Prop({
     required: true,
   })
-  idCardImageUrl!: string;
+  thumbnailUrl!: string;
 
   @Prop({
     default: false,
   })
-  isStudentVerified!: boolean;
+  isPublished!: boolean;
 }
 
-export const StudentSchema =
-  SchemaFactory.createForClass(Student);
+export const CourseSchema =
+  SchemaFactory.createForClass(
+    Course,
+  );

@@ -16,6 +16,9 @@ export enum UserRole {
 
   ADMIN = 'ADMIN',
 }
+// =========================
+// USER SCHEMA
+// =========================  
 
 @Schema({
   timestamps: true,

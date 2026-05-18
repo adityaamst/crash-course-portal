@@ -10,10 +10,6 @@ import {
   UserDocument,
 } from './schemas/user.schema';
 
-import {
-  Student,
-  StudentDocument,
-} from './schemas/student.schema';
 
 @Injectable()
 export class UsersService {
@@ -21,8 +17,7 @@ export class UsersService {
     @InjectModel(User.name)
     private userModel: Model<UserDocument>,
 
-    @InjectModel(Student.name)
-    private studentModel: Model<StudentDocument>,
+
   ) {}
 
   // =========================
@@ -51,17 +46,17 @@ export class UsersService {
   // STUDENT METHODS
   // =========================
 
-  async findStudentByEmail(
-    email: string,
-  ) {
-    return this.studentModel.findOne({
-      email,
-    });
-  }
+  // async findStudentByEmail(
+  //   email: string,
+  // ) {
+  //   return this.studentModel.findOne({
+  //     email,
+  //   });
+  // }
 
-  async createStudent(
-    data: Partial<Student>,
-  ) {
-    return this.studentModel.create(data);
-  }
+  // async createStudent(
+  //   data: Partial<Student>,
+  // ) {
+  //   return this.studentModel.create(data);
+  // }
 }
