@@ -12,6 +12,11 @@ import {
     ContentDocument,
 } from './schemas/content.schema';
 
+import {
+    Assignment,
+    AssignmentDocument,
+} from '../assignments/schemas/assignment.schema';
+
 import { CreateContentDto } from './dto/create-content.dto';
 
 import { UpdateContentDto } from './dto/update-content.dto';
@@ -21,6 +26,9 @@ export class ContentService {
     constructor(
         @InjectModel(Content.name)
         private contentModel: Model<ContentDocument>,
+
+        @InjectModel(Assignment.name)
+        private assignmentModel: Model<AssignmentDocument>,
     ) { }
 
     // =========================
@@ -77,10 +85,15 @@ export class ContentService {
     }
 
     // =========================
-    // GET SINGLE CONTENT
+    // GET SINGLE SUBTOPIC
     // =========================
 
     async getContentById(id: string) {
+
+        // =========================
+        // GET CONTENT
+        // =========================
+
         const content =
             await this.contentModel
                 .findById(id)
@@ -92,7 +105,24 @@ export class ContentService {
             );
         }
 
-        return content;
+        // =========================
+        // GET RELATED ASSIGNMENTS
+        // =========================
+
+        const assignments =
+            await this.assignmentModel.find({
+                contentId: id,
+            });
+
+        // =========================
+        // RESPONSE
+        // =========================
+
+        return {
+            content,
+
+            assignments,
+        };
     }
 
     // =========================
@@ -151,8 +181,6 @@ export class ContentService {
                 'Content deleted successfully',
         };
     }
-
-
 
     // =========================
     // GET CONTENT BY TOPIC

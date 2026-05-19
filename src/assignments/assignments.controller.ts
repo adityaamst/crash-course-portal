@@ -56,6 +56,7 @@ export class AssignmentsController {
   // =========================
 
   @Get()
+  @UseGuards(JwtAuthGuard)
   getAllAssignments() {
     return this.assignmentsService.getAllAssignments();
   }
@@ -64,7 +65,8 @@ export class AssignmentsController {
   // GET ASSIGNMENTS BY CONTENT
   // =========================
 
-  @Get('content/:contentId')
+  @Get('sessions/:contentId')
+  @UseGuards(JwtAuthGuard)
   getAssignmentsByContent(
     @Param('contentId')
     contentId: string,
@@ -79,6 +81,7 @@ export class AssignmentsController {
   // =========================
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
   getAssignmentById(
     @Param('id') id: string,
   ) {

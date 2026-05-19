@@ -56,6 +56,7 @@ export class ContentController {
   // =========================
 
   @Get()
+  @UseGuards(JwtAuthGuard)
   getAllContent() {
     return this.contentService.getAllContent();
   }
@@ -65,6 +66,7 @@ export class ContentController {
   // =========================
 
   @Get('course/:courseId')
+  @UseGuards(JwtAuthGuard)
   getContentByCourse(
     @Param('courseId')
     courseId: string,
@@ -80,6 +82,7 @@ export class ContentController {
 // =========================
 
 @Get('topic/:topic')
+@UseGuards(JwtAuthGuard)
 getContentByTopic(
   @Param('topic')
   topic: string,
@@ -90,10 +93,11 @@ getContentByTopic(
 }
 
   // =========================
-  // GET SINGLE CONTENT
+  // GET SINGLE subtopic
   // =========================
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
   getContentById(
     @Param('id') id: string,
   ) {
